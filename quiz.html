@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100 Questions Quiz Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+            z-index: 0;
+        }
+
+        @keyframes moveBackground {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+            position: relative;
+            z-index: 1;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .question-box {
+            margin: 30px 0;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.05em;
+        }
+
+        .option:hover {
+            background: #e8e9ff;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .option.selected {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .option.correct {
+            background: #4caf50;
+            border-color: #4caf50;
+            color: white;
+        }
+
+        .option.incorrect {
+            background: #f44336;
+            border-color: #f44336;
+            color: white;
+        }
+
+        .option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .result-screen.active {
+            display: block;
+        }
+
+        .quiz-screen {
+            display: block;
+        }
+
+        .quiz-screen.hidden {
+            display: none;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-screen h2 {
+            color: #667eea;
+            margin: 20px 0;
+            font-size: 1.8em;
+        }
+
+        .start-screen p {
+            color: #666;
+            font-size: 1.1em;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="start-screen" id="startScreen">
+            <div class="header">
+                <h1>🧠 Ultimate Quiz Challenge</h1>
+                <h2>100 Questions</h2>
+            </div>
+            <p>Test your knowledge across various topics!</p>
+            <p>Answer all 100 questions and see how much you really know.</p>
+            <button class="btn" onclick="startQuiz()">Start Quiz</button>
+        </div>
+
+        <div class="quiz-screen hidden" id="quizScreen">
+            <div class="header">
+                <h1>Quiz Challenge</h1>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+                <div class="stats">
+                    <span>Question <span id="currentQuestion">1</span> of 100</span>
+                    <span>Score: <span id="score">0</span></span>
+                </div>
+            </div>
+
+            <div class="question-box">
+                <div class="question" id="question"></div>
+                <div class="options" id="options"></div>
+            </div>
+
+            <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>Next Question</button>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <div class="header">
+                <h1>Quiz Complete! 🎉</h1>
+            </div>
+            <div class="score-circle">
+                <div class="score-number" id="finalScore">0</div>
+                <div class="score-text">out of 100</div>
+            </div>
+            <div class="result-message" id="resultMessage"></div>
+            <button class="btn" onclick="restartQuiz()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "What is the capital of France?", opts: ["London", "Berlin", "Paris", "Madrid"], ans: 2 },
+            { q: "Which planet is known as the Red Planet?", opts: ["Venus", "Mars", "Jupiter", "Saturn"], ans: 1 },
+            { q: "Who painted the Mona Lisa?", opts: ["Van Gogh", "Picasso", "Leonardo da Vinci", "Rembrandt"], ans: 2 },
+            { q: "What is the largest ocean on Earth?", opts: ["Atlantic", "Indian", "Arctic", "Pacific"], ans: 3 },
+            { q: "In what year did World War II end?", opts: ["1943", "1944", "1945", "1946"], ans: 2 },
+            { q: "What is the smallest country in the world?", opts: ["Monaco", "Vatican City", "San Marino", "Liechtenstein"], ans: 1 },
+            { q: "Who wrote 'Romeo and Juliet'?", opts: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"], ans: 1 },
+            { q: "What is the chemical symbol for gold?", opts: ["Go", "Gd", "Au", "Ag"], ans: 2 },
+            { q: "How many continents are there?", opts: ["5", "6", "7", "8"], ans: 2 },
+            { q: "What is the largest mammal?", opts: ["African Elephant", "Blue Whale", "Giraffe", "Polar Bear"], ans: 1 },
+            { q: "Which country is home to the kangaroo?", opts: ["New Zealand", "Australia", "South Africa", "Brazil"], ans: 1 },
+            { q: "What is the speed of light?", opts: ["300,000 km/s", "150,000 km/s", "450,000 km/s", "600,000 km/s"], ans: 0 },
+            { q: "Who invented the telephone?", opts: ["Thomas Edison", "Nikola Tesla", "Alexander Graham Bell", "Albert Einstein"], ans: 2 },
+            { q: "What is the hardest natural substance?", opts: ["Gold", "Iron", "Diamond", "Platinum"], ans: 2 },
+            { q: "How many bones are in the human body?", opts: ["186", "206", "226", "246"], ans: 1 },
+            { q: "What is the capital of Japan?", opts: ["Seoul", "Beijing", "Tokyo", "Bangkok"], ans: 2 },
+            { q: "Which gas do plants absorb?", opts: ["Oxygen", "Nitrogen", "Carbon Dioxide", "Hydrogen"], ans: 2 },
+            { q: "What is the largest desert?", opts: ["Sahara", "Arabian", "Gobi", "Antarctic"], ans: 3 },
+            { q: "Who discovered penicillin?", opts: ["Marie Curie", "Alexander Fleming", "Louis Pasteur", "Isaac Newton"], ans: 1 },
+            { q: "What is the currency of the UK?", opts: ["Euro", "Dollar", "Pound Sterling", "Franc"], ans: 2 },
+            { q: "How many hearts does an octopus have?", opts: ["1", "2", "3", "4"], ans: 2 },
+            { q: "What is the tallest mountain?", opts: ["K2", "Kangchenjunga", "Mount Everest", "Makalu"], ans: 2 },
+            { q: "Which element has the symbol 'Fe'?", opts: ["Iron", "Fluorine", "Fermium", "Francium"], ans: 0 },
+            { q: "What year did the Titanic sink?", opts: ["1910", "1911", "1912", "1913"], ans: 2 },
+            { q: "Who was the first person on the moon?", opts: ["Buzz Aldrin", "Neil Armstrong", "Yuri Gagarin", "John Glenn"], ans: 1 },
+            { q: "What is the largest planet in our solar system?", opts: ["Saturn", "Jupiter", "Neptune", "Uranus"], ans: 1 },
+            { q: "How many days are in a leap year?", opts: ["364", "365", "366", "367"], ans: 2 },
+            { q: "What is the boiling point of water?", opts: ["90°C", "100°C", "110°C", "120°C"], ans: 1 },
+            { q: "Who painted 'The Starry Night'?", opts: ["Claude Monet", "Vincent van Gogh", "Pablo Picasso", "Salvador Dali"], ans: 1 },
+            { q: "What is the capital of Italy?", opts: ["Milan", "Venice", "Rome", "Florence"], ans: 2 },
+            { q: "Which animal is known as the 'King of the Jungle'?", opts: ["Tiger", "Lion", "Elephant", "Gorilla"], ans: 1 },
+            { q: "How many sides does a hexagon have?", opts: ["5", "6", "7", "8"], ans: 1 },
+            { q: "What is the largest organ in the human body?", opts: ["Liver", "Brain", "Skin", "Heart"], ans: 2 },
+            { q: "Who wrote 'Harry Potter'?", opts: ["J.R.R. Tolkien", "C.S. Lewis", "J.K. Rowling", "George R.R. Martin"], ans: 2 },
+            { q: "What is the freezing point of water?", opts: ["-10°C", "0°C", "10°C", "32°C"], ans: 1 },
+            { q: "Which country gifted the Statue of Liberty to the USA?", opts: ["England", "France", "Spain", "Italy"], ans: 1 },
+            { q: "How many strings does a standard guitar have?", opts: ["4", "5", "6", "7"], ans: 2 },
+            { q: "What is the smallest prime number?", opts: ["0", "1", "2", "3"], ans: 2 },
+            { q: "Which ocean is the Bermuda Triangle located in?", opts: ["Pacific", "Atlantic", "Indian", "Arctic"], ans: 1 },
+            { q: "What is the main ingredient in guacamole?", opts: ["Tomato", "Avocado", "Pepper", "Onion"], ans: 1 },
+            { q: "How many minutes are in a full day?", opts: ["1440", "1400", "1480", "1500"], ans: 0 },
+            { q: "What is the capital of Canada?", opts: ["Toronto", "Vancouver", "Ottawa", "Montreal"], ans: 2 },
+            { q: "Which vitamin is produced when skin is exposed to sunlight?", opts: ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"], ans: 3 },
+            { q: "What is the square root of 144?", opts: ["10", "11", "12", "13"], ans: 2 },
+            { q: "Who discovered gravity?", opts: ["Galileo", "Newton", "Einstein", "Tesla"], ans: 1 },
+            { q: "What is the longest river in the world?", opts: ["Amazon", "Nile", "Mississippi", "Yangtze"], ans: 1 },
+            { q: "How many colors are in a rainbow?", opts: ["5", "6", "7", "8"], ans: 2 },
+            { q: "What is the national animal of China?", opts: ["Dragon", "Tiger", "Giant Panda", "Lion"], ans: 2 },
+            { q: "Which planet is closest to the Sun?", opts: ["Venus", "Earth", "Mercury", "Mars"], ans: 2 },
+            { q: "What does DNA stand for?", opts: ["Deoxyribonucleic Acid", "Diatomic Nuclear Acid", "Digital Natural Algorithm", "Dynamic Nucleus Acid"], ans: 0 },
+            { q: "How many zeros are in one million?", opts: ["5", "6", "7", "8"], ans: 1 },
+            { q: "What is the capital of Spain?", opts: ["Barcelona", "Madrid", "Seville", "Valencia"], ans: 1 },
+            { q: "Which metal is liquid at room temperature?", opts: ["Mercury", "Lead", "Tin", "Aluminum"], ans: 0 },
+            { q: "How many teeth does an adult human have?", opts: ["28", "30", "32", "34"], ans: 2 },
+            { q: "What is the largest country by area?", opts: ["Canada", "China", "USA", "Russia"], ans: 3 },
+            { q: "Who invented the light bulb?", opts: ["Benjamin Franklin", "Thomas Edison", "Nikola Tesla", "Alexander Bell"], ans: 1 },
+            { q: "What is the smallest ocean?", opts: ["Indian", "Atlantic", "Arctic", "Southern"], ans: 2 },
+            { q: "How many players are on a soccer team?", opts: ["9", "10", "11", "12"], ans: 2 },
+            { q: "What is the chemical formula for water?", opts: ["H2O", "CO2", "O2", "H2O2"], ans: 0 },
+            { q: "Which country hosted the 2016 Olympics?", opts: ["China", "Brazil", "UK", "Russia"], ans: 1 },
+            { q: "What is the capital of Egypt?", opts: ["Alexandria", "Cairo", "Giza", "Luxor"], ans: 1 },
+            { q: "How many degrees in a circle?", opts: ["180", "270", "360", "450"], ans: 2 },
+            { q: "What is the most spoken language?", opts: ["English", "Mandarin Chinese", "Spanish", "Hindi"], ans: 1 },
+            { q: "Which animal can sleep for 3 years?", opts: ["Bear", "Snail", "Sloth", "Turtle"], ans: 1 },
+            { q: "What is the capital of Australia?", opts: ["Sydney", "Melbourne", "Canberra", "Brisbane"], ans: 2 },
+            { q: "How many eyes does a bee have?", opts: ["2", "3", "5", "8"], ans: 2 },
+            { q: "What is the hottest planet?", opts: ["Mercury", "Venus", "Mars", "Jupiter"], ans: 1 },
+            { q: "Who wrote 'To Kill a Mockingbird'?", opts: ["Harper Lee", "Mark Twain", "Ernest Hemingway", "F. Scott Fitzgerald"], ans: 0 },
+            { q: "What is the smallest bone in the human body?", opts: ["Stapes", "Femur", "Radius", "Tibia"], ans: 0 },
+            { q: "How many legs does a spider have?", opts: ["6", "8", "10", "12"], ans: 1 },
+            { q: "What is the capital of Germany?", opts: ["Munich", "Frankfurt", "Berlin", "Hamburg"], ans: 2 },
+            { q: "Which animal is the fastest on land?", opts: ["Lion", "Cheetah", "Leopard", "Tiger"], ans: 1 },
+            { q: "What is the main component of the sun?", opts: ["Oxygen", "Carbon", "Hydrogen", "Helium"], ans: 2 },
+            { q: "How many seconds are in an hour?", opts: ["3000", "3300", "3600", "3900"], ans: 2 },
+            { q: "What is the capital of Russia?", opts: ["St. Petersburg", "Moscow", "Kiev", "Minsk"], ans: 1 },
+            { q: "Which bird cannot fly?", opts: ["Penguin", "Eagle", "Parrot", "Owl"], ans: 0 },
+            { q: "What is the largest bird?", opts: ["Eagle", "Albatross", "Ostrich", "Condor"], ans: 2 },
+            { q: "How many keys are on a standard piano?", opts: ["76", "82", "88", "94"], ans: 2 },
+            { q: "What is the capital of Brazil?", opts: ["Rio de Janeiro", "São Paulo", "Brasília", "Salvador"], ans: 2 },
+            { q: "Which element is essential for breathing?", opts: ["Nitrogen", "Oxygen", "Carbon", "Hydrogen"], ans: 1 },
+            { q: "How many chambers does the human heart have?", opts: ["2", "3", "4", "5"], ans: 2 },
+            { q: "What is the largest type of big cat?", opts: ["Lion", "Tiger", "Leopard", "Jaguar"], ans: 1 },
+            { q: "Who invented the airplane?", opts: ["Wright Brothers", "Leonardo da Vinci", "Henry Ford", "Charles Lindbergh"], ans: 0 },
+            { q: "What is the capital of India?", opts: ["Mumbai", "New Delhi", "Bangalore", "Kolkata"], ans: 1 },
+            { q: "How many sides does a triangle have?", opts: ["2", "3", "4", "5"], ans: 1 },
+            { q: "What is the study of stars called?", opts: ["Biology", "Geology", "Astronomy", "Astrology"], ans: 2 },
+            { q: "Which fruit has seeds on the outside?", opts: ["Apple", "Banana", "Strawberry", "Orange"], ans: 2 },
+            { q: "What is the capital of Mexico?", opts: ["Guadalajara", "Monterrey", "Mexico City", "Cancun"], ans: 2 },
+            { q: "How many wheels does a tricycle have?", opts: ["2", "3", "4", "5"], ans: 1 },
+            { q: "What is the largest land animal?", opts: ["Rhino", "Hippo", "Elephant", "Giraffe"], ans: 2 },
+            { q: "Who painted the Sistine Chapel ceiling?", opts: ["Leonardo da Vinci", "Michelangelo", "Raphael", "Donatello"], ans: 1 },
+            { q: "What is the capital of China?", opts: ["Shanghai", "Beijing", "Hong Kong", "Shenzhen"], ans: 1 },
+            { q: "How many months have 31 days?", opts: ["5", "6", "7", "8"], ans: 2 },
+            { q: "What is the most abundant gas in Earth's atmosphere?", opts: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Hydrogen"], ans: 2 },
+            { q: "Which animal has the longest lifespan?", opts: ["Elephant", "Whale", "Tortoise", "Parrot"], ans: 2 },
+            { q: "What is the capital of Greece?", opts: ["Thessaloniki", "Athens", "Sparta", "Crete"], ans: 1 },
+            { q: "How many planets orbit the Sun?", opts: ["7", "8", "9", "10"], ans: 1 },
+            { q: "What is the currency of Japan?", opts: ["Yuan", "Won", "Yen", "Ringgit"], ans: 2 }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        function startQuiz() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('quizScreen').classList.remove('hidden');
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('score').textContent = score;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            selectedAnswer = null;
+            const q = questions[currentQuestionIndex];
+
+            document.getElementById('question').textContent = q.q;
+            document.getElementById('currentQuestion').textContent = currentQuestionIndex + 1;
+
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+
+            q.opts.forEach((opt, index) => {
+                const btn = document.createElement('div');
+                btn.classList.add('option');
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(index);
+                optionsContainer.appendChild(btn);
+            });
+
+            const progress = ((currentQuestionIndex) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        function selectOption(index) {
+            if (selectedAnswer !== null) return;
+
+            selectedAnswer = index;
+            const q = questions[currentQuestionIndex];
+            const options = document.querySelectorAll('.option');
+
+            options.forEach((opt, i) => {
+                opt.classList.add('disabled');
+                if (i === q.ans) {
+                    opt.classList.add('correct');
+                }
+                if (i === index && i !== q.ans) {
+                    opt.classList.add('incorrect');
+                }
+            });
+
+            if (index === q.ans) {
+                score++;
+                document.getElementById('score').textContent = score;
+            }
+
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function endQuiz() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('resultScreen').classList.add('active');
+
+            document.getElementById('finalScore').textContent = score;
+
+            let message = '';
+            if (score >= 90) {
+                message = "Outstanding! You're a quiz master!";
+            } else if (score >= 70) {
+                message = "Great job! You have strong general knowledge.";
+            } else if (score >= 40) {
+                message = "Nice effort! Keep learning and try again.";
+            } else {
+                message = "Don't worry, keep practicing and you'll improve!";
+            }
+
+            document.getElementById('resultMessage').textContent = message;
+        }
+
+        function restartQuiz() {
+            document.getElementById('resultScreen').classList.remove('active');
+            document.getElementById('startScreen').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
